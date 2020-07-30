@@ -1,0 +1,18 @@
+#TODO. Transform it into Ansible format
+
+#Configure elastic /etc/elasticsearch/elasticsearch.yml
+#Configure kibana, /etc/kibana/kibana.yml
+#you should add also the keycloak-kibana plugin configuration
+
+#keycloak.serverUrl: http://10.9.8.228:8080/auth
+#keycloak.realm: kibana
+#keycloak.clientId: kibana
+#keycloak.clientSecret: y8gSCns8hPTkQr6Zqwu2hPw6ScQDZNZz
+#keycloak.acl.enabled: true
+#xpack.security.enabled: false
+#keycloak.session.cookieOptions.password: rqUBV3tsAKQ990av99KykS52pH9ABlvw
+#keycloak.session.cookieOptions.isSecure: false
+#keycloak.principalNameAttribute: preferred_username
+
+#install the plugin
+#sudo /usr/share/kibana/bin/kibana-plugin install --allow-root https://github.com/novomatic-tech/keycloak-kibana/releases/download/3.2.1/keycloak-kibana-3.2.1_7.5.0.zip

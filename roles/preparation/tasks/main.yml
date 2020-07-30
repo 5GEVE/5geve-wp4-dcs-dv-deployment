@@ -1,0 +1,250 @@
+---
+- name: Create /usr/bin/dcs directory
+  file:
+    path: /usr/bin/dcs
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Copy create_logstash_pipeline.sh script
+  copy:
+    src: create_logstash_pipeline.sh
+    dest: /usr/bin/dcs/create_logstash_pipeline.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Copy delete_logstash_pipeline.sh script
+  copy:
+    src: delete_logstash_pipeline.sh
+    dest: /usr/bin/dcs/delete_logstash_pipeline.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Copy refresh_dashboard.sh script
+  copy:
+    src: refresh_dashboard.sh
+    dest: /usr/bin/dcs/refresh_dashboard.sh
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Check if dcs.service file exists
+  stat:
+    path: /etc/systemd/system/dcs.service 
+  register: dcs_service_file
+
+- name: Stop DCS service
+  shell: systemctl stop dcs.service
+  when: dcs_service_file.stat.exists == true  
+
+- name: Check if dcs_dashboard.service file exists
+  stat:
+    path: /etc/systemd/system/dcs_dashboard.service 
+  register: dcs_dashboard_service_file
+
+- name: Stop DCS Dashboard service
+  shell: systemctl stop dcs_dashboard.service
+  when: dcs_dashboard_service_file.stat.exists == true  
+
+- name: Remove dcs-python directory if exists
+  file:
+    path: /usr/bin/dcs/dcs-python
+    state: absent 
+
+- name: Extract dcs-python module
+  unarchive:
+    src: dcs-python.tar.gz
+    dest: /usr/bin/dcs
+
+- name: Remove dcs directory if exists
+  file:
+    path: /tmp/dcs
+    state: absent 
+
+- name: Extract dcs module
+  unarchive:
+    src: dcs.tar.gz
+    dest: /tmp
+
+- name: Installation of required packages
+  apt:
+    name: ['openjdk-8-jre', 'python3', 'python3-pip', 'apt-transport-https', 'wget', 'nginx', 'curl', 'jq', 'openjdk-8-jdk', 'maven']
+    update_cache: yes
+
+- name: Set JAVA_HOME
+  lineinfile:
+    dest: /etc/environment
+    state: present
+    regexp: '^JAVA_HOME'
+    line: 'JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64'
+
+- name: Select default locale
+  debconf:
+    name: locales
+    question: locales/default_environment_locale
+    value: en_US.UTF-8
+    vtype: select
+  notify:
+    - Rebuild locales database
+
+- name: Build /etc/locale.gen
+  lineinfile:
+    dest: /etc/locale.gen
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: "{{ item.state }}"
+  with_items:
+    - { regexp: '^#? ?de_DE ISO-8859-1', line: 'de_DE ISO-8859-1', state: present }
+    - { regexp: '^#? ?de_DE.UTF-8 UTF-8', line: 'de_DE.UTF-8 UTF-8', state: present }
+    - { regexp: '^#? ?de_DE@euro ISO-8859-15', line: 'de_DE@euro ISO-8859-15', state: present }
+    - { regexp: '^#? ?en_GB ISO-8859-1', line: 'en_GB ISO-8859-1', state: present }
+    - { regexp: '^#? ?en_GB.ISO-8859-15 ISO-8859-15', line: 'en_GB.ISO-8859-15 ISO-8859-15', state: present }
+    - { regexp: '^#? ?en_GB.UTF-8 UTF-8', line: 'en_GB.UTF-8 UTF-8', state: present }
+    - { regexp: '^#? ?en_US ISO-8859-1', line: 'en_US ISO-8859-1', state: present }
+    - { regexp: '^#? ?en_US.ISO-8859-15 ISO-8859-15', line: 'en_US.ISO-8859-15 ISO-8859-15', state: present }
+    - { regexp: '^#? ?en_US.UTF-8 UTF-8', line: 'en_US.UTF-8 UTF-8', state: present }
+  notify:
+    - Rebuild locales database
+
+- name: Add Elastic apt key
+  apt_key:
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    state: present
+
+- name: Check if ELK v6.x is present
+  shell: ls /etc/apt/sources.list.d/ | grep elastic-6.x.list | wc -w
+  register: source_list_check_v6
+
+- name: Check if ELK v7.x is present
+  shell: ls /etc/apt/sources.list.d/ | grep elastic-7.x.list | wc -w
+  register: source_list_check_v7
+
+- name: Stop Kibana service
+  shell: systemctl stop kibana
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Stop Logstash service
+  shell: systemctl stop logstash
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Stop Elasticsearch service
+  shell: systemctl stop elasticsearch
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Removal of ELK Stack
+  apt:
+    name: ['elasticsearch', 'logstash', 'kibana']
+    state: absent
+    purge: yes
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Remove source list related to v6.x
+  shell: sudo rm /etc/apt/sources.list.d/elastic-6.x.list
+  when: source_list_check_v6.stdout != "0"
+
+- name: Remove source list related to v7.x
+  shell: sudo rm /etc/apt/sources.list.d/elastic-7.x.list
+  when: source_list_check_v7.stdout != "0"
+
+- name: Remove /etc/elasticsearch directory
+  file:
+    path: /etc/elasticsearch
+    state: absent 
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Remove /usr/share/elasticsearch directory
+  file:
+    path: /usr/share/elasticsearch
+    state: absent 
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Remove /var/lib/elasticsearch directory
+  file:
+    path: /var/lib/elasticsearch
+    state: absent 
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Remove /etc/kibana directory
+  file:
+    path: /etc/kibana
+    state: absent 
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Remove /usr/share/kibana directory
+  file:
+    path: /usr/share/kibana
+    state: absent 
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Remove /var/lib/kibana directory
+  file:
+    path: /var/lib/kibana
+    state: absent 
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Remove /etc/logstash directory
+  file:
+    path: /etc/logstash
+    state: absent 
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Remove /usr/share/logstash directory
+  file:
+    path: /usr/share/logstash
+    state: absent 
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Remove /var/lib/logstash directory
+  file:
+    path: /var/lib/logstash
+    state: absent 
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Download Elasticsearch
+  get_url:
+    url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.5.0-amd64.deb
+    dest: /tmp/elasticsearch-7.5.0-amd64.deb
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Download Kibana
+  get_url:
+    url: https://artifacts.elastic.co/downloads/kibana/kibana-7.5.0-amd64.deb
+    dest: /tmp/kibana-7.5.0-amd64.deb
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Download Logstash
+  get_url:
+    url: https://artifacts.elastic.co/downloads/logstash/logstash-7.5.0.deb
+    dest: /tmp/logstash-7.5.0.deb
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Install Elasticsearch
+  shell: sudo dpkg -i /tmp/elasticsearch-7.5.0-amd64.deb
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Install Kibana
+  shell: sudo dpkg -i /tmp/kibana-7.5.0-amd64.deb
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Install Logstash
+  shell: sudo dpkg -i /tmp/logstash-7.5.0.deb
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Delete ELK sources
+  shell: sudo rm /tmp/*.deb
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+
+- name: Check if /etc/sudoers file has been modified previously
+  shell: cat /etc/sudoers | grep "{{ansible_user}}" | grep NOPASSWD | wc -w
+  register: etc_sudoers_check
+
+- name: Avoid asking for password with sudo commands
+  shell: echo "{{ansible_user}} ALL=(ALL) NOPASSWD"{{":"}}" ALL" | sudo tee -a /etc/sudoers > /dev/null
+  when: etc_sudoers_check.stdout == "0"
+
+- name: Press enter to continue
+  pause: prompt='Press enter to continue'
+  when: prompt_when_finishes_tasks

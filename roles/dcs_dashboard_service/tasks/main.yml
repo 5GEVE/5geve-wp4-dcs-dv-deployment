@@ -1,0 +1,81 @@
+---
+- name: Remove dcs_dashboard.service file if exists
+  file:
+    path: /etc/systemd/system/dcs_dashboard.service
+    state: absent 
+
+- name: Build kibana-dashboards project
+  shell: mvn clean install -DskipTests
+  args:
+    chdir: /tmp/dcs/kibana-dashboards
+
+- name: Change spring.datasource.password parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'password.*'
+    line: "    password: {{eve_db_password}}"
+
+- name: Change kibana.base_url parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'baseUrl.*'
+    line: "  baseUrl: http://{{ansible_host}}:5601"
+
+- name: Change kibana.oauth-enabled parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'oauth-enabled.*'
+    line: "  oauth-enabled: true"
+  when: kibana_auth_enabled
+
+- name: Change kibana.oauth-enabled parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'oauth-enabled.*'
+    line: "  oauth-enabled: false"
+  when: not kibana_auth_enabled
+
+- name: Change kibana.dashboard-owner-enabled parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'dashboard-owner-enabled.*'
+    line: "  dashboard-owner-enabled: true"
+  when: kibana_auth_enabled
+
+- name: Change kibana.dashboard-owner-enabled parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'dashboard-owner-enabled.*'
+    line: "  dashboard-owner-enabled: false"
+  when: not kibana_auth_enabled
+
+#TODO: change token-uri parameter
+
+- name: Build dcs project
+  shell: mvn clean install -DskipTests
+  args:
+    chdir: /tmp/dcs
+
+- name: Move .jar file to the correct location
+  copy:
+    src: /tmp/dcs/target/dcs-0.0.1-SNAPSHOT.jar
+    dest: /usr/bin/dcs/dcs_dashboard.jar
+    remote_src: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: 0664
+
+- name: Remove dcs directory if exists
+  file:
+    path: /tmp/dcs
+    state: absent 
+
+- name: Create start-up service for DCS REST Client
+  script: create_dcs_dashboard_service.sh {{ansible_user}}
+
+- name: Start DCS Dashboard service
+  shell: systemctl start dcs_dashboard.service
+
+- name: Press enter to continue
+  pause: prompt='Press enter to continue'
+  when: prompt_when_finishes_tasks

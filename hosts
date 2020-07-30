@@ -1,0 +1,2 @@
+[dcs-dv]
+#test-ansible-elk ansible_host=10.9.8.120 ansible_user=user ansible_ssh_pass=root ansible_become_pass=root

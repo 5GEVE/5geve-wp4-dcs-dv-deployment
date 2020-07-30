@@ -1,0 +1,90 @@
+---
+- name: Stop Kibana service
+  shell: systemctl stop kibana
+
+- name: Check if Kibana old configuration file exists
+  stat:
+    path: /etc/kibana/kibana.yml.old
+  register: kibana_old_config_file
+
+- name: Create Kibana old configuration file
+  copy:
+    src: /etc/kibana/kibana.yml
+    dest: /etc/kibana/kibana.yml.old
+    remote_src: yes 
+  when: kibana_old_config_file.stat.exists == false
+
+- name: Return Kibana configuration file to default
+  copy:
+    src: /etc/kibana/kibana.yml.old
+    dest: /etc/kibana/kibana.yml
+    remote_src: yes 
+  when: kibana_old_config_file.stat.exists == true
+
+- name: Change DCS_IP_ADDRESS parameter in refresh_dashboard.sh script
+  lineinfile:
+    path: /usr/bin/dcs/refresh_dashboard.sh
+    regexp: 'DCS_IP_ADDRESS='
+    line: "DCS_IP_ADDRESS={{ansible_host}}"
+
+- name: Change PASSWORD parameter in refresh_dashboard.sh script
+  lineinfile:
+    path: /usr/bin/dcs/refresh_dashboard.sh
+    regexp: 'PASSWORD='
+    line: "PASSWORD={{elasticsearch_password}}"
+
+- name: Change server.host attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: '#server.host: "localhost"'
+    line: "server.host: \"{{ansible_host}}\""
+
+- name: Change server.name attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: '#server.name: "your-hostname"'
+    line: "server.name: kibana"
+
+- name: Change elasticsearch.hosts attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: "#elasticsearch.hosts: [\"http://localhost:9200\"]"
+    line: "elasticsearch.hosts: [\"http://{{ansible_host}}:9200\"]"
+
+- name: Change elasticsearch.username attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: '#elasticsearch.username: "kibana"'
+    line: "elasticsearch.username: elastic"
+  when: kibana_auth_enabled
+
+- name: Change elasticsearch.password attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: '#elasticsearch.password: "pass"'
+    line: "elasticsearch.password: {{elasticsearch_password}}"
+  when: kibana_auth_enabled
+
+- name: Include xpack.security.enabled attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "xpack.security.enabled: true"
+    insertafter: EOF
+  when: kibana_auth_enabled
+
+- name: Include xpack.security.enabled attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "xpack.security.enabled: false"
+    insertafter: EOF
+  when: not kibana_auth_enabled
+
+- name: Enable Kibana service
+  shell: systemctl enable kibana
+
+- name: Start Kibana service
+  shell: systemctl start kibana
+
+- name: Press enter to continue
+  pause: prompt='Press enter to continue'
+  when: prompt_when_finishes_tasks

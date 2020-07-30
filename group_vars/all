@@ -1,0 +1,8 @@
+---
+
+ansible_python_interpreter: /usr/bin/python3
+prompt_when_finishes_tasks: true
+elasticsearch_password: changeme
+dcm_ip_address: 10.9.8.121
+eve_db_password: changeme
+kibana_auth_enabled: false

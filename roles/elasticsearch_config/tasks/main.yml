@@ -1,0 +1,91 @@
+---
+- name: Stop Elasticsearch service
+  shell: systemctl stop elasticsearch
+
+- name: Check if Elasticsearch old configuration file exists
+  stat:
+    path: /etc/elasticsearch/elasticsearch.yml.old
+  register: elasticsearch_old_config_file
+
+- name: Create Elasticsearch old configuration file
+  copy:
+    src: /etc/elasticsearch/elasticsearch.yml
+    dest: /etc/elasticsearch/elasticsearch.yml.old
+    remote_src: yes 
+  when: elasticsearch_old_config_file.stat.exists == false
+
+- name: Return Elasticsearch configuration file to default
+  copy:
+    src: /etc/elasticsearch/elasticsearch.yml.old
+    dest: /etc/elasticsearch/elasticsearch.yml
+    remote_src: yes 
+  when: elasticsearch_old_config_file.stat.exists == true
+
+- name: Change network.host attribute in Elasticsearch configuration file
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: '#network.host: 192.168.0.1'
+    line: "network.host: 0.0.0.0"
+
+- name: Change cluster.name attribute in Elasticsearch configuration file
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: '#cluster.name: my-application'
+    line: 'cluster.name: "dcs"'
+
+- name: Include discovery.type attribute in Elasticsearch configuration file
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'discovery.type: single-node'
+    insertafter: EOF
+
+- name: Include xpack.license.self_generated.type attribute in Elasticsearch configuration file
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'xpack.license.self_generated.type: basic'
+    insertafter: EOF
+
+- name: Set xpack.security.enabled attribute in Elasticsearch configuration file to true provisionally
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: "xpack.security.enabled: true"
+    insertafter: EOF
+
+- name: Include xpack.monitoring.collection.enabled attribute in Elasticsearch configuration file
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    line: 'xpack.monitoring.collection.enabled: true'
+    insertafter: EOF
+
+- name: Enable Elasticsearch service
+  shell: systemctl enable elasticsearch
+
+- name: Start Elasticsearch service
+  shell: systemctl start elasticsearch
+
+- name: Change Elastic passwords
+  pause: prompt='The first time you configure Elasticsearch, log-in in the server and execute "sudo /bin/bash /usr/share/elasticsearch/bin/elasticsearch-setup-passwords interactive", then introduce the same password defined in elasticsearch_password in all users. If there is not the first time this command is executed, do nothing. Then, press enter to continue'
+
+- name: Stop Elasticsearch service
+  shell: systemctl stop elasticsearch
+
+- name: Include xpack.security.enabled attribute in Elasticsearch configuration file
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: 'xpack.security.enabled: true'
+    line: "xpack.security.enabled: true"
+  when: kibana_auth_enabled
+
+- name: Include xpack.security.enabled attribute in Elasticsearch configuration file
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml
+    regexp: 'xpack.security.enabled: true'
+    line: "xpack.security.enabled: false"
+  when: not kibana_auth_enabled
+
+- name: Start Elasticsearch service
+  shell: systemctl start elasticsearch
+
+- name: Press enter to continue
+  pause: prompt='Press enter to continue'
+  when: prompt_when_finishes_tasks

@@ -1,0 +1,63 @@
+---
+- hosts: all
+  become: true
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: preparation
+  handlers:
+    - name: Rebuild locales database
+      command: "{{ item }}"
+      with_items:
+        - dpkg-reconfigure locales -f noninteractive
+        - /usr/sbin/locale-gen
+
+- hosts: all
+  become: true
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: elasticsearch_config
+
+- hosts: all
+  become: true
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: kibana_config
+
+- hosts: all
+  become: true
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: logstash_config
+
+- hosts: all
+  become: true
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: postgresql_config
+
+- hosts: all
+  become: true
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: dcs_service
+
+- hosts: all
+  become: true
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: dcs_dashboard_service
+
+#TODO
+#- hosts: all
+#  become: true
+#  gather_facts: no
+#  tasks:
+#    - include_role:
+#        name: keycloak_proxy_config

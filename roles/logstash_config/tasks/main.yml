@@ -1,0 +1,114 @@
+---
+- name: Stop Logstash service
+  shell: systemctl stop logstash
+
+- name: Check if Logstash old configuration file exists
+  stat:
+    path: /etc/logstash/logstash.yml.old
+  register: logstash_old_config_file
+
+- name: Create Logstash old configuration file
+  copy:
+    src: /etc/logstash/logstash.yml
+    dest: /etc/logstash/logstash.yml.old
+    remote_src: yes 
+  when: logstash_old_config_file.stat.exists == false
+
+- name: Return Logstash configuration file to default
+  copy:
+    src: /etc/logstash/logstash.yml.old
+    dest: /etc/logstash/logstash.yml
+    remote_src: yes 
+  when: logstash_old_config_file.stat.exists == true
+
+- name: Remove pipelines file if exists
+  file:
+    path: /etc/logstash/pipelines.yml
+    state: absent 
+
+- name: Create empty pipelines file
+  file:
+    path: /etc/logstash/pipelines.yml
+    state: touch 
+
+- name: Change DCS_IP_ADDRESS parameter in create_logstash_pipeline.sh script
+  lineinfile:
+    path: /usr/bin/dcs/create_logstash_pipeline.sh
+    regexp: 'DCS_IP_ADDRESS='
+    line: "DCS_IP_ADDRESS={{ansible_host}}"
+
+- name: Change DCM_IP_ADDRESS parameter in create_logstash_pipeline.sh script
+  lineinfile:
+    path: /usr/bin/dcs/create_logstash_pipeline.sh
+    regexp: 'DCM_IP_ADDRESS='
+    line: "DCM_IP_ADDRESS={{dcm_ip_address}}"
+
+- name: Change PASSWORD parameter in create_logstash_pipeline.sh script
+  lineinfile:
+    path: /usr/bin/dcs/create_logstash_pipeline.sh
+    regexp: 'PASSWORD='
+    line: "PASSWORD={{elasticsearch_password}}"
+
+- name: Change DCS_IP_ADDRESS parameter in delete_logstash_pipeline.sh script
+  lineinfile:
+    path: /usr/bin/dcs/delete_logstash_pipeline.sh
+    regexp: 'DCS_IP_ADDRESS='
+    line: "DCS_IP_ADDRESS={{ansible_host}}"
+
+- name: Change PASSWORD parameter in delete_logstash_pipeline.sh script
+  lineinfile:
+    path: /usr/bin/dcs/delete_logstash_pipeline.sh
+    regexp: 'PASSWORD='
+    line: "PASSWORD={{elasticsearch_password}}"
+
+- name: Change http.host attribute in Logstash configuration file
+  lineinfile:
+    path: /etc/logstash/logstash.yml
+    regexp: '# http.host: "127.0.0.1"'
+    line: 'http.host: "0.0.0.0"'
+
+- name: Change config.reload.automatic attribute in Logstash configuration file
+  lineinfile:
+    path: /etc/logstash/logstash.yml
+    regexp: '# config.reload.automatic: false'
+    line: 'config.reload.automatic: true'
+
+- name: Change config.reload.interval attribute in Logstash configuration file
+  lineinfile:
+    path: /etc/logstash/logstash.yml
+    regexp: '# config.reload.interval: 3s'
+    line: 'config.reload.interval: 1s'
+
+- name: Change xpack.monitoring.elasticsearch.hosts attribute in Logstash configuration file
+  lineinfile:
+    path: /etc/logstash/logstash.yml
+    regexp: '#xpack.monitoring.elasticsearch.hosts: ["https://es1:9200", "https://es2:9200"]'
+    line: "xpack.monitoring.elasticsearch.hosts: [\"http://{{ansible_host}}:9200\"]"
+
+- name: Change xpack.monitoring.enabled attribute in Logstash configuration file
+  lineinfile:
+    path: /etc/logstash/logstash.yml
+    regexp: '#xpack.monitoring.enabled: false'
+    line: 'xpack.monitoring.enabled: true'
+
+- name: Change xpack.monitoring.elasticsearch.username attribute in Logstash configuration file
+  lineinfile:
+    path: /etc/logstash/logstash.yml
+    regexp: '#xpack.monitoring.elasticsearch.username: logstash_system'
+    line: 'xpack.monitoring.elasticsearch.username: elastic'
+
+- name: Change xpack.monitoring.elasticsearch.password attribute in Logstash configuration file
+  lineinfile:
+    path: /etc/logstash/logstash.yml
+    regexp: '#xpack.monitoring.elasticsearch.password: password'
+    line: "xpack.monitoring.elasticsearch.password: {{elasticsearch_password}}"
+
+- name: Enable Logstash service
+  shell: systemctl enable logstash
+
+- name: Start Logstash service
+  shell: systemctl start logstash
+
+- name: Press enter to continue
+  pause: prompt='Press enter to continue'
+  when: prompt_when_finishes_tasks

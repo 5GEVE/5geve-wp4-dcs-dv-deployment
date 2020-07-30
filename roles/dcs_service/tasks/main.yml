@@ -1,0 +1,30 @@
+---
+- name: export LC_ALL
+  shell: export LC_ALL="en_US.UTF-8"
+
+- name: export LC_CTYPE
+  shell: export LC_CTYPE="en_US.UTF-8"
+
+- name: Install Python dependencies
+  shell: pip3 install -r /usr/bin/dcs/dcs-python/requirements.txt
+
+- name: Install requests package in pip3
+  shell: pip3 install requests
+
+- name: Install flask-swagger package in pip3
+  shell: pip3 install flask-swagger
+
+- name: Remove dcs.service file if exists
+  file:
+    path: /etc/systemd/system/dcs.service
+    state: absent 
+
+- name: Create start-up service for DCS REST Client
+  script: create_dcs_service.sh {{ansible_user}} {{dcm_ip_address}} {{eve_db_password}}
+
+- name: Start DCS REST Client service
+  shell: systemctl start dcs.service
+
+- name: Press enter to continue
+  pause: prompt='Press enter to continue'
+  when: prompt_when_finishes_tasks

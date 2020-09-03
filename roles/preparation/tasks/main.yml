@@ -207,35 +207,35 @@
   get_url:
     url: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.5.0-amd64.deb
     dest: /tmp/elasticsearch-7.5.0-amd64.deb
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: not update_module
 
 - name: Download Kibana
   get_url:
     url: https://artifacts.elastic.co/downloads/kibana/kibana-7.5.0-amd64.deb
     dest: /tmp/kibana-7.5.0-amd64.deb
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: not update_module
 
 - name: Download Logstash
   get_url:
     url: https://artifacts.elastic.co/downloads/logstash/logstash-7.5.0.deb
     dest: /tmp/logstash-7.5.0.deb
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: not update_module
 
 - name: Install Elasticsearch
   shell: sudo dpkg -i /tmp/elasticsearch-7.5.0-amd64.deb
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: not update_module
 
 - name: Install Kibana
   shell: sudo dpkg -i /tmp/kibana-7.5.0-amd64.deb
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: not update_module
 
 - name: Install Logstash
   shell: sudo dpkg -i /tmp/logstash-7.5.0.deb
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: not update_module
 
 - name: Delete ELK sources
   shell: sudo rm /tmp/*.deb
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: not update_module
 
 - name: Check if /etc/sudoers file has been modified previously
   shell: cat /etc/sudoers | grep "{{ansible_user}}" | grep NOPASSWD | wc -w

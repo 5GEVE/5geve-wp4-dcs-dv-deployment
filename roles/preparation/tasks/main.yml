@@ -217,8 +217,8 @@
 
 - name: Download Logstash
   get_url:
-    url: https://artifacts.elastic.co/downloads/logstash/logstash-7.5.0.deb
-    dest: /tmp/logstash-7.5.0.deb
+    url: https://artifacts.elastic.co/downloads/logstash/logstash-7.9.1.deb
+    dest: /tmp/logstash-7.9.1.deb
   when: not update_module
 
 - name: Install Elasticsearch
@@ -230,7 +230,7 @@
   when: not update_module
 
 - name: Install Logstash
-  shell: sudo dpkg -i /tmp/logstash-7.5.0.deb
+  shell: sudo dpkg -i /tmp/logstash-7.9.1.deb
   when: not update_module
 
 - name: Delete ELK sources

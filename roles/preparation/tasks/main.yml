@@ -71,7 +71,7 @@
 
 - name: Installation of required packages
   apt:
-    name: ['openjdk-8-jre', 'python3', 'python3-pip', 'apt-transport-https', 'wget', 'nginx', 'curl', 'jq', 'openjdk-8-jdk', 'maven']
+    name: ['openjdk-8-jre', 'python3', 'python3-pip', 'apt-transport-https', 'wget', 'nginx', 'curl', 'jq', 'openjdk-8-jdk', 'maven', 'npm']
     update_cache: yes
 
 - name: Set JAVA_HOME
@@ -124,22 +124,22 @@
 
 - name: Stop Kibana service
   shell: systemctl stop kibana
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Stop Logstash service
   shell: systemctl stop logstash
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Stop Elasticsearch service
   shell: systemctl stop elasticsearch
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Removal of ELK Stack
   apt:
     name: ['elasticsearch', 'logstash', 'kibana']
     state: absent
     purge: yes
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Remove source list related to v6.x
   shell: sudo rm /etc/apt/sources.list.d/elastic-6.x.list
@@ -153,55 +153,55 @@
   file:
     path: /etc/elasticsearch
     state: absent 
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Remove /usr/share/elasticsearch directory
   file:
     path: /usr/share/elasticsearch
     state: absent 
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Remove /var/lib/elasticsearch directory
   file:
     path: /var/lib/elasticsearch
     state: absent 
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Remove /etc/kibana directory
   file:
     path: /etc/kibana
     state: absent 
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Remove /usr/share/kibana directory
   file:
     path: /usr/share/kibana
     state: absent 
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Remove /var/lib/kibana directory
   file:
     path: /var/lib/kibana
     state: absent 
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Remove /etc/logstash directory
   file:
     path: /etc/logstash
     state: absent 
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Remove /usr/share/logstash directory
   file:
     path: /usr/share/logstash
     state: absent 
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Remove /var/lib/logstash directory
   file:
     path: /var/lib/logstash
     state: absent 
-  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0"
+  when: source_list_check_v6.stdout != "0" or source_list_check_v7.stdout != "0" or not update_module
 
 - name: Download Elasticsearch
   get_url:
@@ -217,8 +217,8 @@
 
 - name: Download Logstash
   get_url:
-    url: https://artifacts.elastic.co/downloads/logstash/logstash-7.9.1.deb
-    dest: /tmp/logstash-7.9.1.deb
+    url: https://artifacts.elastic.co/downloads/logstash/logstash-7.5.0.deb
+    dest: /tmp/logstash-7.5.0.deb
   when: not update_module
 
 - name: Install Elasticsearch
@@ -230,7 +230,7 @@
   when: not update_module
 
 - name: Install Logstash
-  shell: sudo dpkg -i /tmp/logstash-7.9.1.deb
+  shell: sudo dpkg -i /tmp/logstash-7.5.0.deb
   when: not update_module
 
 - name: Delete ELK sources

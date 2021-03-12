@@ -45,45 +45,56 @@
     regexp: '#server.name: "your-hostname"'
     line: "server.name: kibana"
 
+- name: Change server.basePath attribute in Kibana configuration file (only in production environment)
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    regexp: '#server.basePath: ""'
+    line: "server.basePath: /portal/metrics/dashboard"
+  when: production_environment
+
 - name: Change elasticsearch.hosts attribute in Kibana configuration file
   lineinfile:
     path: /etc/kibana/kibana.yml
     regexp: "#elasticsearch.hosts: [\"http://localhost:9200\"]"
     line: "elasticsearch.hosts: [\"http://{{ansible_host}}:9200\"]"
 
-- name: Change elasticsearch.username attribute in Kibana configuration file
-  lineinfile:
-    path: /etc/kibana/kibana.yml
-    regexp: '#elasticsearch.username: "kibana"'
-    line: "elasticsearch.username: elastic"
-  when: kibana_auth_enabled
+#- name: Change elasticsearch.username attribute in Kibana configuration file
+#  lineinfile:
+#    path: /etc/kibana/kibana.yml
+#    regexp: '#elasticsearch.username: "kibana"'
+#    line: "elasticsearch.username: elastic"
+#  when: kibana_auth_enabled
 
-- name: Change elasticsearch.password attribute in Kibana configuration file
-  lineinfile:
-    path: /etc/kibana/kibana.yml
-    regexp: '#elasticsearch.password: "pass"'
-    line: "elasticsearch.password: {{elasticsearch_password}}"
-  when: kibana_auth_enabled
+#- name: Change elasticsearch.password attribute in Kibana configuration file
+#  lineinfile:
+#    path: /etc/kibana/kibana.yml
+#    regexp: '#elasticsearch.password: "pass"'
+#    line: "elasticsearch.password: {{elasticsearch_password}}"
+#  when: kibana_auth_enabled
 
-- name: Include xpack.security.enabled attribute in Kibana configuration file
-  lineinfile:
-    path: /etc/kibana/kibana.yml
-    line: "xpack.security.enabled: true"
-    insertafter: EOF
-  when: kibana_auth_enabled
+#- name: Include xpack.security.enabled attribute in Kibana configuration file
+#  lineinfile:
+#    path: /etc/kibana/kibana.yml
+#    line: "xpack.security.enabled: true"
+#    insertafter: EOF
+#  when: kibana_auth_enabled
 
 - name: Include xpack.security.enabled attribute in Kibana configuration file
   lineinfile:
     path: /etc/kibana/kibana.yml
     line: "xpack.security.enabled: false"
     insertafter: EOF
-  when: not kibana_auth_enabled
+#  when: not kibana_auth_enabled
 
 - name: Enable Kibana service
   shell: systemctl enable kibana
 
 - name: Start Kibana service
   shell: systemctl start kibana
+
+- name: Start nginx service
+  shell: systemctl start nginx
+  when: kibana_auth_enabled
 
 - name: Press enter to continue
   pause: prompt='Press enter to continue'

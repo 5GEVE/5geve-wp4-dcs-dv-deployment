@@ -12,7 +12,7 @@
 - name: Change spring.datasource.password parameter in application.yml file
   lineinfile:
     path: /tmp/dcs/src/main/resources/application.yml
-    regexp: 'password.*'
+    regexp: '    password.*'
     line: "    password: {{eve_db_password}}"
 
 - name: Change kibana.base_url parameter in application.yml file
@@ -20,6 +20,76 @@
     path: /tmp/dcs/src/main/resources/application.yml
     regexp: 'baseUrl.*'
     line: "  baseUrl: http://{{ansible_host}}:5601"
+
+- name: Change kibana.dashboardUrl parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'dashboardUrl.*'
+    line: "  dashboardUrl: https://portal.5g-eve.eu/portal/metrics/dashboard"
+  when: production_environment
+
+- name: Change kibana.dashboardUrl parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'dashboardUrl.*'
+    line: "  dashboardUrl: http://{{ansible_host}}:5601"
+  when: not production_environment and not kibana_auth_enabled
+
+- name: Change kibana.dashboardUrl parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'dashboardUrl.*'
+    line: "  dashboardUrl: http://{{ansible_host}}:25601"
+  when: not production_environment and kibana_auth_enabled
+
+- name: Change kibana.token-uri parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'token-uri.*'
+    line: "  token-uri: http://{{keycloak_ip_address}}:8080/auth/realms/{{keycloak_realm}}/protocol/openid-connect/token"
+  when: kibana_auth_enabled
+
+- name: Change kibana.client-id parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'client-id: kibana.*'
+    line: "  client-id: {{keycloak_client}}"
+  when: kibana_auth_enabled
+
+- name: Change kibana.client-secret parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'client-secret.*'
+    line: "  client-secret: {{keycloak_clientsecret}}"
+  when: kibana_auth_enabled
+
+- name: Change keycloak-admin.server-url parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: '  server-url.*'
+    line: "  server-url: http://{{keycloak_ip_address}}:8080/auth"
+  when: kibana_auth_enabled
+
+- name: Change keycloak-admin.username parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: '^  username.*'
+    line: "  username: {{keycloak_username}}"
+  when: kibana_auth_enabled
+
+- name: Change keycloak-admin.password parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: '^  password.*'
+    line: "  password: {{keycloak_password}}"
+  when: kibana_auth_enabled
+
+- name: Change keycloak-admin.users-realm parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: '  users-realm.*'
+    line: "  users-realm: {{keycloak_realm}}"
+  when: kibana_auth_enabled
 
 - name: Change kibana.oauth-enabled parameter in application.yml file
   lineinfile:
@@ -49,7 +119,61 @@
     line: "  dashboard-owner-enabled: false"
   when: not kibana_auth_enabled
 
-#TODO: change token-uri parameter
+- name: Change keycloak-user parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'keycloak-user.*'
+    line: "keycloak-user: {{keycloak_nginx_user}}"
+  when: kibana_auth_enabled
+
+- name: Change keycloak-password parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'keycloak-password.*'
+    line: "keycloak-password: {{keycloak_nginx_password}}"
+  when: kibana_auth_enabled
+
+- name: Change nginx-file parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'nginx-file.*'
+    line: "nginx-file: {{keycloak_nginx_file}}"
+  when: kibana_auth_enabled
+
+- name: Change keycloak.realm parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'keycloak.realm.*'
+    line: "keycloak.realm: {{keycloak_realm}}"
+  when: kibana_auth_enabled
+
+- name: Change keycloak.auth-server-url parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'keycloak.auth-server-url.*'
+    line: "keycloak.auth-server-url: http://{{keycloak_ip_address}}:8080/auth"
+  when: kibana_auth_enabled
+
+- name: Change keycloak.resource parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'keycloak.resource.*'
+    line: "keycloak.resource: {{keycloak_client}}"
+  when: kibana_auth_enabled
+
+- name: Change keycloak.credentials.secret parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'keycloak.credentials.secret.*'
+    line: "keycloak.credentials.secret: {{keycloak_clientsecret}}"
+  when: kibana_auth_enabled
+
+- name: Change elasticsearch.ip_port parameter in application.yml file
+  lineinfile:
+    path: /tmp/dcs/src/main/resources/application.yml
+    regexp: 'elasticsearch.ip_port.*'
+    line: "elasticsearch.ip_port: http://{{ansible_host}}:9200/"
+  when: kibana_auth_enabled
 
 - name: Build dcs project
   shell: mvn clean install -DskipTests
@@ -70,11 +194,78 @@
     path: /tmp/dcs
     state: absent 
 
+- name: Copy nginx configuration file
+  copy:
+    src: kibana
+    dest: "{{ keycloak_nginx_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  when: kibana_auth_enabled and not production_environment
+
+- name: Copy nginx configuration file
+  copy:
+    src: kibana_production
+    dest: "{{ keycloak_nginx_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  when: kibana_auth_enabled and production_environment
+
+- name: Copy nginx configuration file for mgmt access
+  copy:
+    src: mgmt
+    dest: /etc/nginx/sites-available/mgmt
+    owner: root
+    group: root
+    mode: 0644
+  when: kibana_auth_enabled and production_environment
+
+- name: Change proxy_pass parameter in nginx configuration file
+  lineinfile:
+    path: "{{ keycloak_nginx_file }}"
+    regexp: 'proxy_pass.*'
+    line: "        proxy_pass http://{{ansible_host}}:5601;"
+  when: kibana_auth_enabled
+
+- name: Change proxy_pass parameter in nginx configuration file for mgmt access
+  lineinfile:
+    path: /etc/nginx/sites-available/mgmt
+    regexp: 'proxy_pass.*'
+    line: "        proxy_pass http://{{ansible_host}}:5601;"
+  when: kibana_auth_enabled and production_environment
+
+- name: Create symbolic link to nginx configuration file
+  file:
+    path: /etc/nginx/sites-enabled/kibana
+    src: "{{ keycloak_nginx_file }}"
+    state: link 
+  when: kibana_auth_enabled
+
+- name: Create symbolic link to nginx configuration file for mgmt access
+  file:
+    path: /etc/nginx/sites-enabled/mgmt
+    src: /etc/nginx/sites-available/mgmt
+    state: link 
+  when: kibana_auth_enabled and production_environment
+
+- name: Reload nginx configuration
+  shell: systemctl reload nginx
+  when: kibana_auth_enabled
+
 - name: Create start-up service for DCS REST Client
   script: create_dcs_dashboard_service.sh {{ansible_user}}
 
 - name: Start DCS Dashboard service
   shell: systemctl start dcs_dashboard.service
+
+- name: Copy replace_token_mgmt.sh script
+  copy:
+    src: replace_token_mgmt.sh
+    dest: /usr/bin/dcs/replace_token_mgmt.sh
+    owner: root
+    group: root
+    mode: 0755
 
 - name: Press enter to continue
   pause: prompt='Press enter to continue'

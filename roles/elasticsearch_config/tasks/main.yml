@@ -69,19 +69,19 @@
 - name: Stop Elasticsearch service
   shell: systemctl stop elasticsearch
 
-- name: Include xpack.security.enabled attribute in Elasticsearch configuration file
-  lineinfile:
-    path: /etc/elasticsearch/elasticsearch.yml
-    regexp: 'xpack.security.enabled: true'
-    line: "xpack.security.enabled: true"
-  when: kibana_auth_enabled
+#- name: Include xpack.security.enabled attribute in Elasticsearch configuration file
+#  lineinfile:
+#    path: /etc/elasticsearch/elasticsearch.yml
+#    regexp: 'xpack.security.enabled: true'
+#    line: "xpack.security.enabled: true"
+#  when: kibana_auth_enabled
 
 - name: Include xpack.security.enabled attribute in Elasticsearch configuration file
   lineinfile:
     path: /etc/elasticsearch/elasticsearch.yml
     regexp: 'xpack.security.enabled: true'
     line: "xpack.security.enabled: false"
-  when: not kibana_auth_enabled
+#  when: not kibana_auth_enabled
 
 - name: Start Elasticsearch service
   shell: systemctl start elasticsearch

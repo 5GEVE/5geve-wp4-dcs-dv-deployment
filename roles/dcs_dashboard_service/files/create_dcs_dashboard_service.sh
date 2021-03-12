@@ -5,7 +5,7 @@ echo Description=DCS Dashboard Service | sudo tee -a /etc/systemd/system/dcs_das
 echo | sudo tee -a /etc/systemd/system/dcs_dashboard.service > /dev/null
 echo [Service] | sudo tee -a /etc/systemd/system/dcs_dashboard.service > /dev/null
 echo User=$1 | sudo tee -a /etc/systemd/system/dcs_dashboard.service > /dev/null
-echo ExecStart=/usr/bin/java -jar /usr/bin/dcs/dcs_dashboard.jar | sudo tee -a /etc/systemd/system/dcs_dashboard.service > /dev/null
+echo ExecStart=/usr/bin/sudo /usr/bin/java -jar /usr/bin/dcs/dcs_dashboard.jar | sudo tee -a /etc/systemd/system/dcs_dashboard.service > /dev/null
 echo SuccessExitStatus=143 | sudo tee -a /etc/systemd/system/dcs_dashboard.service > /dev/null
 echo TimeoutStopSec=10 | sudo tee -a /etc/systemd/system/dcs_dashboard.service > /dev/null
 echo RestartSec=10 | sudo tee -a /etc/systemd/system/dcs_dashboard.service > /dev/null

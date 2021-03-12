@@ -27,7 +27,7 @@ $ sudo apt-get update -y
 $ sudo apt-get install git -y
 ```
 
-### 3. Download this DCS-DV repository from Gitlab
+### 3. Download this DCS-DV repository from Github
 
 It is contained in the 5geve-wp4-dcs-dv-deployment Ansible project:
 
@@ -44,9 +44,9 @@ In this Ansible project, there are some configuration files that must be complet
 
 * **hosts:** here, you have to include the DCS-DV server which will be configured within this Ansible project. The format of each line (PLEASE FOLLOW THIS FORMAT) should be the following: *dcs_dv_hostname ansible_host=<DCS_DV_IP> ansible_user=<USER> ansible_ssh_pass=<SSH_PASS> ansible_become_pass=<SUDO_PASS>*
 * **group_vars:** includes useful variables for the servers defined in the *hosts* file.
-	* **all:** applies to all servers. Nothing to change here at the beginning. Only if you want to be stopped with each Ansible role execution, set *prompt_when_finishes_tasks* to true, or false otherwise. Other variables that may require a change are *elasticsearch_password*, which must be set to the password to be used for "elastic" user in Elasticsearch (if this playbook has already been executed in a server, you can check this parameter in the /usr/bin/dcs/create_logstash_pipeline.sh script - PASSWORD variable), *dcm_ip_address*, setting the DCM IP address, *eve_db_password*, setting the password to be used for the eve user in the DB, *kibana_auth_enabled*, enabling or not authentication in Kibana, and *update_module*, which specifies if it is an update (true) or an installation from scratch (false).
+	* **all:** applies to all servers. Nothing to change here at the beginning. Only if you want to be stopped with each Ansible role execution, set *prompt_when_finishes_tasks* to true, or false otherwise. Other variables that may require a change are *elasticsearch_password*, which must be set to the password to be used for "elastic" user in Elasticsearch (if this playbook has already been executed in a server, you can check this parameter in the /usr/bin/dcs/create_logstash_pipeline.sh script - PASSWORD variable), *dcm_ip_address*, setting the DCM IP address, *eve_db_password*, setting the password to be used for the eve user in the DB, *kibana_auth_enabled*, enabling or not authentication in Kibana with Keycloak, *update_module*, which specifies if it is an update (true) or an installation from scratch (false), *production_environment*, to set some features related to the production environment in 5G EVE, *keycloak_ip_address*, setting the Keycloak IP address, *keycloak_realm*, setting the Keycloak Realm name, *keycloak_client*, setting the Keycloak client name, *keycloak_clientsecret*, setting the Keycloak password for the selected client, *keycloak_cookie_password*, setting the Keycloak cookie password, *keycloak_username*, setting the Keycloak username, *keycloak_password*, setting the Keycloak password, *keycloak_nginx_user*, setting the user to be used by nginx to interact with Keycloak, *keycloak_nginx_password*, setting the password related to the previous user, and *keycloak_nginx_file*, which is the file in which the nginx configuration will be saved.
 
-### 5. Download 5geve-wp4-dcs-signalling-topic-handler repository from Gitlab
+### 5. Download 5geve-wp4-dcs-signalling-topic-handler repository from Github
 
 ```sh
 $ cd /tmp
@@ -66,7 +66,7 @@ $ tar czf dcs-python.tar.gz dcs-python
 $ mv dcs-python.tar.gz 5geve-wp4-dcs-dv-deployment/roles/preparation/files
 ```
 
-### 7. Download 5geve-wp4-dcs-kibana-dashboards-handler repository from Gitlab and prepare it properly
+### 7. Download 5geve-wp4-dcs-kibana-dashboards-handler repository from Github and prepare it properly
 
 ```sh
 $ cd /tmp

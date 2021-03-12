@@ -5,5 +5,16 @@ prompt_when_finishes_tasks: true
 elasticsearch_password: changeme
 dcm_ip_address: 10.9.8.121
 eve_db_password: changeme
-kibana_auth_enabled: false
+kibana_auth_enabled: true
 update_module: false
+production_environment: false
+keycloak_ip_address: 10.9.8.228
+keycloak_realm: changeme
+keycloak_client: changeme
+keycloak_clientsecret: changeme
+keycloak_cookie_password: changeme
+keycloak_username: changeme
+keycloak_password: changeme
+keycloak_nginx_user: changeme
+keycloak_nginx_password: changeme
+keycloak_nginx_file: changeme

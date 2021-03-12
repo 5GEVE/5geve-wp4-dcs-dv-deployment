@@ -31,6 +31,14 @@
   gather_facts: no
   tasks:
     - include_role:
+        name: keycloak_proxy_config
+      when: kibana_auth_enabled
+
+- hosts: all
+  become: true
+  gather_facts: no
+  tasks:
+    - include_role:
         name: logstash_config
 
 - hosts: all
@@ -53,11 +61,3 @@
   tasks:
     - include_role:
         name: dcs_dashboard_service
-
-#TODO
-#- hosts: all
-#  become: true
-#  gather_facts: no
-#  tasks:
-#    - include_role:
-#        name: keycloak_proxy_config

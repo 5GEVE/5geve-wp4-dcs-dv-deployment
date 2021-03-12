@@ -1,0 +1,13 @@
+server {
+    listen 25601;
+    location / {
+        proxy_pass http://10.5.7.12:5601;
+        proxy_set_header  Host $host;
+        proxy_set_header  X-Real-IP $remote_addr;
+        proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header  Authorization "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJQS1Q1Q3Y3cVNwejIyYUJ1TXJmQVhNWVdBcUJfNkplaFlncElLR3V5VkM0In0.eyJqdGkiOiIwM2NlYzI4MC1iZGYxLTRkNDAtYmM4OC1iZTdmMzI2NzRhNWMiLCJleHAiOjE2MDc5NjMxMzEsIm5iZiI6MCwiaWF0IjoxNjA3OTU5NTMxLCJpc3MiOiJodHRwOi8vMTAuNS43LjExOjgwODAvYXV0aC9yZWFsbXMvNWdldmUiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiNjlmYzZmY2YtYzliNS00ODlmLTk3MTQtZDU4NDIzMjZiNDRjIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoia2liYW5hIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiYjQxYjg3OGMtYTEwZS00OWMzLTlkOWItYWE3MDQzMzYzN2JlIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwOi8vMTAuNS43LjEyOjU2MDEiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJraWJhbmEiOnsicm9sZXMiOlsidmlldy1kYXNoYm9hcmRzIl19LCJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBlbWFpbCBwcm9maWxlIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJncm91cHMiOltdLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJraWJhbmF1c2VyIn0.h70KPtwoR7UAG35mI25309zmgla8MNehHJ-x51pdS00IGdNmA8pjBBy1RhKa5cFXYNMqiRbfYhn7ygA0MTzKH13aMvgcU9e9TgClQdz29mjIMG7ArFNYTbw3RMUtGSZtqKqLPfp9tntEM-eV5BbOLohB1i003v-EvvtYuj6KXqdz0FQ_i7VSXiAG5Lgk1G7xa_9ixECyJmXfCcGuictQSHTRqdqdVhq48etZf-t1XCD1L91XR1cIXMJnyyILPyMdMNjAt_HsEyFdrTRGccBa3hgBwD56OHSjSjZB9xteGUxJsmC1tSyAm1Xd8-RpVpuxhxUnpJnwtwHksUvWuf1lDg"; # base64-encoded username:password to pass in header
+    }
+    add_header Access-Control-Allow-Origin *;
+    add_header Access-Control-Allow-Headers "Authorization, Origin, X-Requested-With, Content-Type, Accept";
+    add_header Access-Control-Allow-Credentials "true";
+}

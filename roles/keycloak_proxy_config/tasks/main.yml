@@ -1,18 +1,72 @@
-#TODO. Transform it into Ansible format
+---
+- name: Stop Kibana service
+  shell: systemctl stop kibana
 
-#Configure elastic /etc/elasticsearch/elasticsearch.yml
-#Configure kibana, /etc/kibana/kibana.yml
-#you should add also the keycloak-kibana plugin configuration
+- name: Uninstall keycloak-kibana plugin (if present)
+  shell: sudo /usr/share/kibana/bin/kibana-plugin remove --allow-root keycloak-kibana
+  failed_when: false
+  changed_when: false
 
-#keycloak.serverUrl: http://10.9.8.228:8080/auth
-#keycloak.realm: kibana
-#keycloak.clientId: kibana
-#keycloak.clientSecret: y8gSCns8hPTkQr6Zqwu2hPw6ScQDZNZz
-#keycloak.acl.enabled: true
-#xpack.security.enabled: false
-#keycloak.session.cookieOptions.password: rqUBV3tsAKQ990av99KykS52pH9ABlvw
-#keycloak.session.cookieOptions.isSecure: false
-#keycloak.principalNameAttribute: preferred_username
+- name: Include keycloak.serverUrl attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "keycloak.serverUrl: http://{{keycloak_ip_address}}:8080/auth"
+    insertafter: EOF
 
-#install the plugin
-#sudo /usr/share/kibana/bin/kibana-plugin install --allow-root https://github.com/novomatic-tech/keycloak-kibana/releases/download/3.2.1/keycloak-kibana-3.2.1_7.5.0.zip
+- name: Include keycloak.realm attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "keycloak.realm: {{keycloak_realm}}"
+    insertafter: EOF
+
+- name: Include keycloak.clientId attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "keycloak.clientId: {{keycloak_client}}"
+    insertafter: EOF
+
+- name: Include keycloak.clientSecret attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "keycloak.clientSecret: {{keycloak_clientsecret}}"
+    insertafter: EOF
+
+- name: Include keycloak.acl.enabled attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "keycloak.acl.enabled: true"
+    insertafter: EOF
+
+- name: Include keycloak.session.cookieOptions.password attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "keycloak.session.cookieOptions.password: {{keycloak_cookie_password}}"
+    insertafter: EOF
+
+- name: Include keycloak.session.cookieOptions.isSecure in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "keycloak.session.cookieOptions.isSecure: false"
+    insertafter: EOF
+
+- name: Include keycloak.principalNameAttribute attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "keycloak.principalNameAttribute: preferred_username"
+    insertafter: EOF
+
+- name: Include keycloak.acl.ownerAttribute attribute in Kibana configuration file
+  lineinfile:
+    path: /etc/kibana/kibana.yml
+    line: "keycloak.acl.ownerAttribute: preferred_username"
+    insertafter: EOF
+
+- name: Install keycloak-kibana plugin
+  shell: sudo /usr/share/kibana/bin/kibana-plugin install --allow-root https://github.com/novomatic-tech/keycloak-kibana/releases/download/3.2.1/keycloak-kibana-3.2.1_7.5.0.zip
+
+- name: Start Kibana service
+  shell: systemctl start kibana
+
+- name: Press enter to continue
+  pause: prompt='Press enter to continue'
+  when: prompt_when_finishes_tasks
